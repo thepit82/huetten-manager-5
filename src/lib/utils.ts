@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply text-gray-900 antialiased;
+  }
+
+  /* Zebra striping for tables */
+  tbody tr:nth-child(odd) {
+    @apply bg-gray-50;
+  }
+  tbody tr:hover {
+    @apply bg-blue-50/50;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl shadow-sm border;
+  }
+
+  .input {
+    @apply w-full h-11 px-3 rounded-lg border border-gray-300 text-sm
+           focus:outline-none focus:ring-2 focus:ring-secondary
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  /* Touch target compliance: min 44px */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
