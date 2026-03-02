@@ -28,7 +28,7 @@ export default function DashboardPage() {
       const [persons, groups, expenses, attendanceToday] = await Promise.all([
         supabase.from('persons').select('id', { count: 'exact', head: true }).eq('trip_id', tripId),
         supabase.from('billing_groups').select('id', { count: 'exact', head: true }).eq('trip_id', tripId),
-        supabase.from('expenses').select('amount').eq('trip_id', tripId).eq('status', 'confirmed'),
+        supabase.from('expenses').select('*').eq('trip_id', tripId).eq('status', 'confirmed'),
         supabase
           .from('attendance')
           .select('id', { count: 'exact', head: true })
