@@ -542,6 +542,7 @@ export type DishIngredient = Tables<'dish_ingredients'>
 export type MealPlan = Tables<'meal_plan'>
 export type Billing = Tables<'billings'>
 
+
 // Insert type helpers
 export type TablesInsert<T extends keyof Database['public']['Tables']> =
   Database['public']['Tables'][T]['Insert']
@@ -553,3 +554,11 @@ export type BillingGroupInsert = TablesInsert<'billing_groups'>
 export type AttendanceInsert = TablesInsert<'attendance'>
 export type ExpenseInsert = TablesInsert<'expenses'>
 export type TripInsert = TablesInsert<'trips'>
+
+// Update type helpers
+export type TablesUpdate<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Update']
+
+export type AgeCategoryUpdate = TablesUpdate<'age_categories'>
+export type RoomUpdate = TablesUpdate<'rooms'>
+export type PersonUpdate = TablesUpdate<'persons'>
