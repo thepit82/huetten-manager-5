@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { ConfirmModal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
 import { getSupabaseClient } from '@/lib/supabase'
-import type { Room } from '@/types/database'
+import type { Room, RoomInsert } from '@/types/database'
 
 interface RoomEditorProps {
   tripId: string
@@ -48,7 +48,7 @@ export function RoomEditor({ tripId, rooms, onChange }: RoomEditorProps) {
     if (!form.name.trim()) return
     setLoading(true)
 
-    const payload = {
+    const payload: RoomInsert = {
       name: form.name.trim(),
       beds: Math.max(1, Number(form.beds)),
       trip_id: tripId,

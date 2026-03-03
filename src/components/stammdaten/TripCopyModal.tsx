@@ -6,7 +6,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { getSupabaseClient } from '@/lib/supabase'
-import type { Trip, AgeCategory, Room } from '@/types/database'
+import type { Trip, AgeCategory, Room, AgeCategoryInsert, RoomInsert } from '@/types/database'
 
 interface TripCopyModalProps {
   open: boolean
@@ -79,10 +79,12 @@ export function TripCopyModal({
         if (error) throw error
 
         if (srcAc && srcAc.length > 0) {
-          const inserts = srcAc.map(({ id: _id, created_at: _ca, updated_at: _ua, trip_id: _ti, ...rest }) => ({
-            ...rest,
-            trip_id: targetTripId,
-          }))
+          const inserts: AgeCategoryInsert[] = srcAc.map(
+            ({ id: _id, created_at: _ca, updated_at: _ua, trip_id: _ti, ...rest }) => ({
+              ...rest,
+              trip_id: targetTripId,
+            })
+          )
           const { data: created, error: insertErr } = await supabase
             .from('age_categories')
             .insert(inserts)
@@ -101,10 +103,12 @@ export function TripCopyModal({
         if (error) throw error
 
         if (srcRooms && srcRooms.length > 0) {
-          const inserts = srcRooms.map(({ id: _id, created_at: _ca, updated_at: _ua, trip_id: _ti, ...rest }) => ({
-            ...rest,
-            trip_id: targetTripId,
-          }))
+          const inserts: RoomInsert[] = srcRooms.map(
+            ({ id: _id, created_at: _ca, updated_at: _ua, trip_id: _ti, ...rest }) => ({
+              ...rest,
+              trip_id: targetTripId,
+            })
+          )
           const { data: created, error: insertErr } = await supabase
             .from('rooms')
             .insert(inserts)
