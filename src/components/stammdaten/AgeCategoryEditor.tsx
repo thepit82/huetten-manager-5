@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { ConfirmModal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
 import { getSupabaseClient } from '@/lib/supabase'
-import type { AgeCategory, AgeCategoryInsert, AgeCategoryUpdate } from '@/types/database'
+import type { AgeCategory, AgeCategoryInsert } from '@/types/database'
 
 const DEFAULT_CATEGORIES: Omit<AgeCategoryInsert, 'trip_id' | 'sort_order'>[] = [
   { name: 'Kleinkinder', age_from: 0,  age_to: 5,  overnight_factor: 0,    meal_factor: 0,   food_factor: 0.25 },
@@ -75,23 +75,28 @@ export function AgeCategoryEditor({ tripId, categories, onChange }: AgeCategoryE
     e.preventDefault()
     setLoading(true)
 
-    const basePayload = {
+    const parsedFields = {
       name: form.name.trim(),
       age_from: Number(form.age_from),
       age_to: Number(form.age_to),
       overnight_factor: Number(form.overnight_factor),
       meal_factor: Number(form.meal_factor),
       food_factor: Number(form.food_factor),
-      trip_id: tripId,
-      sort_order: editingAc?.sort_order ?? categories.length,
     }
 
     try {
       if (editingAc) {
-        const updatePayload: AgeCategoryUpdate = basePayload
+        // Update: nur die editierbaren Felder, kein trip_id
         const { data, error } = await supabase
           .from('age_categories')
-          .update(updatePayload)
+          .update({
+            name: parsedFields.name,
+            age_from: parsedFields.age_from,
+            age_to: parsedFields.age_to,
+            overnight_factor: parsedFields.overnight_factor,
+            meal_factor: parsedFields.meal_factor,
+            food_factor: parsedFields.food_factor,
+          })
           .eq('id', editingAc.id)
           .select()
           .single()
@@ -99,10 +104,14 @@ export function AgeCategoryEditor({ tripId, categories, onChange }: AgeCategoryE
         onChange(categories.map((c) => (c.id === editingAc.id ? data : c)))
         success('Altersklasse gespeichert')
       } else {
-        const insertPayload: AgeCategoryInsert = basePayload
+        // Insert: alle Felder inkl. trip_id und sort_order
         const { data, error } = await supabase
           .from('age_categories')
-          .insert(insertPayload)
+          .insert({
+            ...parsedFields,
+            trip_id: tripId,
+            sort_order: categories.length,
+          })
           .select()
           .single()
         if (error) throw error
