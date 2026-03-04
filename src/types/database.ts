@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
+  }
   public: {
     Tables: {
       age_categories: {
@@ -49,6 +54,15 @@ export type Database = {
           trip_id?: string
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "age_categories_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       attendance: {
         Row: {
@@ -81,6 +95,22 @@ export type Database = {
           trip_id?: string
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       billing_groups: {
         Row: {
@@ -107,6 +137,22 @@ export type Database = {
           trip_id?: string
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "billing_groups_contact_person_fk"
+            columns: ["contact_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_groups_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       billings: {
         Row: {
@@ -135,7 +181,7 @@ export type Database = {
           surplus_flat_overnight: number | null
           surplus_meal: number | null
           trip_id: string
-          type: 'interim' | 'final'
+          type: string
           updated_at: string | null
         }
         Insert: {
@@ -164,7 +210,7 @@ export type Database = {
           surplus_flat_overnight?: number | null
           surplus_meal?: number | null
           trip_id: string
-          type: 'interim' | 'final'
+          type: string
           updated_at?: string | null
         }
         Update: {
@@ -193,9 +239,25 @@ export type Database = {
           surplus_flat_overnight?: number | null
           surplus_meal?: number | null
           trip_id?: string
-          type?: 'interim' | 'final'
+          type?: string
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "billings_billing_group_id_fkey"
+            columns: ["billing_group_id"]
+            isOneToOne: false
+            referencedRelation: "billing_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billings_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dish_ingredients: {
         Row: {
@@ -225,6 +287,15 @@ export type Database = {
           sort_order?: number | null
           unit?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "dish_ingredients_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dishes: {
         Row: {
@@ -251,6 +322,15 @@ export type Database = {
           trip_id?: string
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "dishes_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expenses: {
         Row: {
@@ -263,7 +343,7 @@ export type Database = {
           photo: string | null
           receipt_checked: boolean | null
           rejection_reason: string | null
-          status: 'submitted' | 'confirmed' | 'rejected' | null
+          status: string | null
           submitted_by: string | null
           trip_id: string
           updated_at: string | null
@@ -278,7 +358,7 @@ export type Database = {
           photo?: string | null
           receipt_checked?: boolean | null
           rejection_reason?: string | null
-          status?: 'submitted' | 'confirmed' | 'rejected' | null
+          status?: string | null
           submitted_by?: string | null
           trip_id: string
           updated_at?: string | null
@@ -293,11 +373,27 @@ export type Database = {
           photo?: string | null
           receipt_checked?: boolean | null
           rejection_reason?: string | null
-          status?: 'submitted' | 'confirmed' | 'rejected' | null
+          status?: string | null
           submitted_by?: string | null
           trip_id?: string
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meal_plan: {
         Row: {
@@ -333,6 +429,36 @@ export type Database = {
           trip_id?: string
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_responsible_1_id_fkey"
+            columns: ["responsible_1_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_responsible_2_id_fkey"
+            columns: ["responsible_2_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       persons: {
         Row: {
@@ -347,7 +473,7 @@ export type Database = {
           house_number: string | null
           id: string
           id_number: string | null
-          id_type: 'id_card' | 'passport' | null
+          id_type: string | null
           issuing_authority: string | null
           last_name: string
           nationality: string | null
@@ -371,7 +497,7 @@ export type Database = {
           house_number?: string | null
           id?: string
           id_number?: string | null
-          id_type?: 'id_card' | 'passport' | null
+          id_type?: string | null
           issuing_authority?: string | null
           last_name: string
           nationality?: string | null
@@ -395,7 +521,7 @@ export type Database = {
           house_number?: string | null
           id?: string
           id_number?: string | null
-          id_type?: 'id_card' | 'passport' | null
+          id_type?: string | null
           issuing_authority?: string | null
           last_name?: string
           nationality?: string | null
@@ -407,6 +533,29 @@ export type Database = {
           trip_id?: string
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "persons_billing_group_id_fkey"
+            columns: ["billing_group_id"]
+            isOneToOne: false
+            referencedRelation: "billing_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "persons_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "persons_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -415,7 +564,7 @@ export type Database = {
           full_name: string | null
           id: string
           person_id: string | null
-          role: 'admin' | 'user' | 'guest' | null
+          role: string | null
           updated_at: string | null
         }
         Insert: {
@@ -424,7 +573,7 @@ export type Database = {
           full_name?: string | null
           id: string
           person_id?: string | null
-          role?: 'admin' | 'user' | 'guest' | null
+          role?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -433,9 +582,18 @@ export type Database = {
           full_name?: string | null
           id?: string
           person_id?: string | null
-          role?: 'admin' | 'user' | 'guest' | null
+          role?: string | null
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rooms: {
         Row: {
@@ -465,6 +623,15 @@ export type Database = {
           trip_id?: string
           updated_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trips: {
         Row: {
@@ -478,7 +645,7 @@ export type Database = {
           id: string
           name: string
           start_date: string
-          status: 'planning' | 'active' | 'completed' | 'archived'
+          status: string
           updated_at: string | null
           year: number
         }
@@ -493,7 +660,7 @@ export type Database = {
           id?: string
           name: string
           start_date: string
-          status?: 'planning' | 'active' | 'completed' | 'archived'
+          status?: string
           updated_at?: string | null
           year: number
         }
@@ -508,57 +675,149 @@ export type Database = {
           id?: string
           name?: string
           start_date?: string
-          status?: 'planning' | 'active' | 'completed' | 'archived'
+          status?: string
           updated_at?: string | null
           year?: number
         }
+        Relationships: []
       }
     }
-    Views: Record<string, never>
-    Functions: {
-      get_my_role: { Args: Record<string, never>; Returns: string }
-      is_admin: { Args: Record<string, never>; Returns: boolean }
-      is_user_or_admin: { Args: Record<string, never>; Returns: boolean }
+    Views: {
+      [_ in never]: never
     }
-    Enums: Record<string, never>
-    CompositeTypes: Record<string, never>
+    Functions: {
+      get_my_role: { Args: never; Returns: string }
+      is_admin: { Args: never; Returns: boolean }
+      is_user_or_admin: { Args: never; Returns: boolean }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
-// Convenience type aliases
-export type Tables<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Row']
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-export type Trip = Tables<'trips'>
-export type AgeCategory = Tables<'age_categories'>
-export type Room = Tables<'rooms'>
-export type BillingGroup = Tables<'billing_groups'>
-export type Person = Tables<'persons'>
-export type Profile = Tables<'profiles'>
-export type Attendance = Tables<'attendance'>
-export type Expense = Tables<'expenses'>
-export type Dish = Tables<'dishes'>
-export type DishIngredient = Tables<'dish_ingredients'>
-export type MealPlan = Tables<'meal_plan'>
-export type Billing = Tables<'billings'>
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
-// Insert type helpers
-export type TablesInsert<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Insert']
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
-export type AgeCategoryInsert = TablesInsert<'age_categories'>
-export type RoomInsert = TablesInsert<'rooms'>
-export type PersonInsert = TablesInsert<'persons'>
-export type BillingGroupInsert = TablesInsert<'billing_groups'>
-export type AttendanceInsert = TablesInsert<'attendance'>
-export type ExpenseInsert = TablesInsert<'expenses'>
-export type TripInsert = TablesInsert<'trips'>
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
-// Update type helpers
-export type TablesUpdate<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Update']
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums\"][DefaultSchemaEnumNameOrOptions]
+    : never
 
-export type AgeCategoryUpdate = TablesUpdate<'age_categories'>
-export type RoomUpdate = TablesUpdate<'rooms'>
-export type PersonUpdate = TablesUpdate<'persons'>
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
