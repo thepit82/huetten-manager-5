@@ -2,13 +2,22 @@
 
 import { useState } from 'react'
 import { Pencil, Trash2, Plus, RotateCcw } from 'lucide-react'
+import { createBrowserClient } from '@supabase/ssr'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { ConfirmModal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
-import { getSupabaseClient } from '@/lib/supabase'
+import type { Database } from '@/types/database'
 import type { AgeCategory, AgeCategoryInsert } from '@/types/database'
+
+// Direkt typisierter Client – umgeht den Singleton-Inference-Bug mit getSupabaseClient()
+function useSupabase() {
+  return createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
 const DEFAULT_CATEGORIES: Omit<AgeCategoryInsert, 'trip_id' | 'sort_order'>[] = [
   { name: 'Kleinkinder', age_from: 0,  age_to: 5,  overnight_factor: 0,    meal_factor: 0,   food_factor: 0.25 },
@@ -44,7 +53,7 @@ function defaultAcForm(ac?: AgeCategory | null): AcFormState {
 }
 
 export function AgeCategoryEditor({ tripId, categories, onChange }: AgeCategoryEditorProps) {
-  const supabase = getSupabaseClient()
+  const supabase = useSupabase()
   const { success, error: showError } = useToast()
 
   const [editingAc, setEditingAc] = useState<AgeCategory | null>(null)
@@ -86,17 +95,18 @@ export function AgeCategoryEditor({ tripId, categories, onChange }: AgeCategoryE
 
     try {
       if (editingAc) {
-        // Update: nur die editierbaren Felder, kein trip_id
+        // Expliziter Typ direkt aus Database – kein Alias, maximale TypeScript-Klarheit
+        const updateData: Database['public']['Tables']['age_categories']['Update'] = {
+          name: parsedFields.name,
+          age_from: parsedFields.age_from,
+          age_to: parsedFields.age_to,
+          overnight_factor: parsedFields.overnight_factor,
+          meal_factor: parsedFields.meal_factor,
+          food_factor: parsedFields.food_factor,
+        }
         const { data, error } = await supabase
           .from('age_categories')
-          .update({
-            name: parsedFields.name,
-            age_from: parsedFields.age_from,
-            age_to: parsedFields.age_to,
-            overnight_factor: parsedFields.overnight_factor,
-            meal_factor: parsedFields.meal_factor,
-            food_factor: parsedFields.food_factor,
-          })
+          .update(updateData)
           .eq('id', editingAc.id)
           .select()
           .single()
@@ -104,14 +114,14 @@ export function AgeCategoryEditor({ tripId, categories, onChange }: AgeCategoryE
         onChange(categories.map((c) => (c.id === editingAc.id ? data : c)))
         success('Altersklasse gespeichert')
       } else {
-        // Insert: alle Felder inkl. trip_id und sort_order
+        const insertData: Database['public']['Tables']['age_categories']['Insert'] = {
+          ...parsedFields,
+          trip_id: tripId,
+          sort_order: categories.length,
+        }
         const { data, error } = await supabase
           .from('age_categories')
-          .insert({
-            ...parsedFields,
-            trip_id: tripId,
-            sort_order: categories.length,
-          })
+          .insert(insertData)
           .select()
           .single()
         if (error) throw error
@@ -156,16 +166,17 @@ export function AgeCategoryEditor({ tripId, categories, onChange }: AgeCategoryE
         if (error) throw error
       }
 
-      const inserts: AgeCategoryInsert[] = DEFAULT_CATEGORIES.map((cat, i) => ({
-        name: cat.name,
-        age_from: cat.age_from,
-        age_to: cat.age_to,
-        overnight_factor: cat.overnight_factor,
-        meal_factor: cat.meal_factor,
-        food_factor: cat.food_factor,
-        trip_id: tripId,
-        sort_order: i,
-      }))
+      const inserts: Database['public']['Tables']['age_categories']['Insert'][] =
+        DEFAULT_CATEGORIES.map((cat, i) => ({
+          name: cat.name,
+          age_from: cat.age_from,
+          age_to: cat.age_to,
+          overnight_factor: cat.overnight_factor,
+          meal_factor: cat.meal_factor,
+          food_factor: cat.food_factor,
+          trip_id: tripId,
+          sort_order: i,
+        }))
 
       const { data, error } = await supabase
         .from('age_categories')
