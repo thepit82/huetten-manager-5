@@ -821,3 +821,55 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+// ============================================================
+// Convenience Type Aliases – direkt verwendbar in Komponenten
+// ============================================================
+
+export type Trip = Tables<'trips'>
+export type TripInsert = TablesInsert<'trips'>
+export type TripUpdate = TablesUpdate<'trips'>
+
+export type AgeCategory = Tables<'age_categories'>
+export type AgeCategoryInsert = TablesInsert<'age_categories'>
+export type AgeCategoryUpdate = TablesUpdate<'age_categories'>
+
+export type Room = Tables<'rooms'>
+export type RoomInsert = TablesInsert<'rooms'>
+export type RoomUpdate = TablesUpdate<'rooms'>
+
+export type Person = Tables<'persons'>
+export type PersonInsert = TablesInsert<'persons'>
+export type PersonUpdate = TablesUpdate<'persons'>
+
+export type Profile = Tables<'profiles'>
+export type ProfileInsert = TablesInsert<'profiles'>
+export type ProfileUpdate = TablesUpdate<'profiles'>
+
+export type BillingGroup = Tables<'billing_groups'>
+export type BillingGroupInsert = TablesInsert<'billing_groups'>
+export type BillingGroupUpdate = TablesUpdate<'billing_groups'>
+
+export type Attendance = Tables<'attendance'>
+export type AttendanceInsert = TablesInsert<'attendance'>
+export type AttendanceUpdate = TablesUpdate<'attendance'>
+
+export type Expense = Tables<'expenses'>
+export type ExpenseInsert = TablesInsert<'expenses'>
+export type ExpenseUpdate = TablesUpdate<'expenses'>
+
+export type Dish = Tables<'dishes'>
+export type DishInsert = TablesInsert<'dishes'>
+export type DishUpdate = TablesUpdate<'dishes'>
+
+export type DishIngredient = Tables<'dish_ingredients'>
+export type DishIngredientInsert = TablesInsert<'dish_ingredients'>
+export type DishIngredientUpdate = TablesUpdate<'dish_ingredients'>
+
+export type MealPlan = Tables<'meal_plan'>
+export type MealPlanInsert = TablesInsert<'meal_plan'>
+export type MealPlanUpdate = TablesUpdate<'meal_plan'>
+
+export type Billing = Tables<'billings'>
+export type BillingInsert = TablesInsert<'billings'>
+export type BillingUpdate = TablesUpdate<'billings'>
