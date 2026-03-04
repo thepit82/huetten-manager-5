@@ -5,6 +5,7 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { useSelectedTrip } from '@/lib/useSelectedTrip'
 import { formatDate, formatEur } from '@/lib/billing/helpers'
 import { Users, ClipboardCheck, Receipt, Mountain } from 'lucide-react'
+import type { Expense } from '@/types/database'
 
 interface TripStats {
   personsCount: number
@@ -25,10 +26,9 @@ export default function DashboardPage() {
       const tripId = selectedTrip!.id
       const today = new Date().toISOString().split('T')[0]
 
-      const [persons, groups, expenses, attendanceToday] = await Promise.all([
+      const [persons, groups, attendanceToday] = await Promise.all([
         supabase.from('persons').select('id', { count: 'exact', head: true }).eq('trip_id', tripId),
         supabase.from('billing_groups').select('id', { count: 'exact', head: true }).eq('trip_id', tripId),
-        supabase.from('expenses').select('amount').eq('trip_id', tripId).eq('status', 'confirmed'),
         supabase
           .from('attendance')
           .select('id', { count: 'exact', head: true })
@@ -37,7 +37,15 @@ export default function DashboardPage() {
           .eq('meal_confirmed', true),
       ])
 
-      const total = (expenses.data ?? []).reduce((s, e) => s + Number(e.amount), 0)
+      // Separate query with explicit type cast to avoid TypeScript inference issues
+      const { data: expenseRows } = await supabase
+        .from('expenses')
+        .select('amount')
+        .eq('trip_id', tripId)
+        .eq('status', 'confirmed')
+
+      const total = (expenseRows as Pick<Expense, 'amount'>[] | null ?? [])
+        .reduce((s, e) => s + Number(e.amount), 0)
 
       setStats({
         personsCount: persons.count ?? 0,
@@ -64,7 +72,6 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#1E3A5F]">{selectedTrip.name}</h1>
         <p className="text-gray-500 text-sm mt-1">
@@ -73,7 +80,6 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
           icon={<Users className="h-6 w-6 text-[#2563EB]" />}
@@ -97,7 +103,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Trip details card */}
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h2 className="font-semibold text-[#1E3A5F] mb-4">Trip-Details</h2>
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
