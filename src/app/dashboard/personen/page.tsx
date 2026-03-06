@@ -6,7 +6,7 @@ import { useSelectedTrip } from '@/lib/useSelectedTrip'
 import { usePersons } from '@/hooks/usePersons'
 import { useRooms } from '@/hooks/useRooms'
 import { useBillingGroups } from '@/hooks/useBillingGroups'
-import PersonForm from '@/components/persons/PersonForm'
+import PersonForm, { type PersonFormData } from '@/components/persons/PersonForm'
 import Modal from '@/components/ui/Modal'
 import Toast from '@/components/ui/Toast'
 import ConfirmModal from '@/components/ui/ConfirmModal'
@@ -58,7 +58,7 @@ export default function PersonenPage() {
   const roomMap = useMemo(() => Object.fromEntries(rooms.map(r => [r.id, r])), [rooms])
   const groupMap = useMemo(() => Object.fromEntries(billingGroups.map(g => [g.id, g])), [billingGroups])
 
-  const handleSave = async (data: Parameters<typeof createPerson>[0]) => {
+  const handleSave = async (data: PersonFormData) => {
     try {
       if (editPerson) {
         await updatePerson(editPerson.id, data)
@@ -285,4 +285,3 @@ export default function PersonenPage() {
     </div>
   )
 }
-
