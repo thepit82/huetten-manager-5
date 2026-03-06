@@ -3,6 +3,13 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Modal (Basis-Overlay)
+// Verwendung:
+//   import Modal from '@/components/ui/Modal'          ← Default Export (Phase 3)
+//   import { Modal } from '@/components/ui/Modal'      ← Named Export  (Phase 1/2)
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface ModalProps {
   open: boolean
   title: string
@@ -11,30 +18,19 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
-export default function Modal({ open, title, onClose, children, size = 'md' }: ModalProps) {
+function Modal({ open, title, onClose, children, size = 'md' }: ModalProps) {
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [open])
 
   if (!open) return null
 
-  const widthClass = {
-    sm: 'max-w-sm',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-  }[size]
+  const widthClass = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' }[size]
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className={`relative bg-white rounded-2xl shadow-xl w-full ${widthClass} max-h-[90vh] overflow-y-auto`}>
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white rounded-t-2xl z-10">
           <h2 className="text-lg font-semibold text-[#1E3A5F]">{title}</h2>
@@ -45,15 +41,20 @@ export default function Modal({ open, title, onClose, children, size = 'md' }: M
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="px-6 py-5">
-          {children}
-        </div>
+        <div className="px-6 py-5">{children}</div>
       </div>
     </div>
   )
 }
 
-// ── Named export für Abwärtskompatibilität mit Phase-1/2-Code ──────────────
+export default Modal       // import Modal from '@/components/ui/Modal'
+export { Modal }           // import { Modal } from '@/components/ui/Modal'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ConfirmModal
+// Verwendung:
+//   import { ConfirmModal } from '@/components/ui/Modal'   ← Named Export (Phase 1/2)
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface ConfirmModalProps {
   open: boolean
