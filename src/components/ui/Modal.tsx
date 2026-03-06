@@ -7,6 +7,8 @@ import { X, Loader2 } from 'lucide-react'
 // Modal (Basis-Overlay)
 // import Modal from '@/components/ui/Modal'          ← Default Export (Phase 3)
 // import { Modal } from '@/components/ui/Modal'      ← Named Export  (Phase 1/2)
+//
+// Breite steuern: entweder size="md" ODER className="max-w-md" – beide funktionieren
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface ModalProps {
@@ -14,10 +16,12 @@ interface ModalProps {
   title: string
   onClose: () => void
   children: React.ReactNode
-  size?: 'sm' | 'md' | 'lg'
+  // Zwei alternative Wege zur Breitensteuerung:
+  size?: 'sm' | 'md' | 'lg' | 'xl'   // Phase 3
+  className?: string                   // Phase 1/2: className="max-w-md"
 }
 
-function Modal({ open, title, onClose, children, size = 'md' }: ModalProps) {
+function Modal({ open, title, onClose, children, size = 'md', className }: ModalProps) {
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -25,12 +29,13 @@ function Modal({ open, title, onClose, children, size = 'md' }: ModalProps) {
 
   if (!open) return null
 
-  const widthClass = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' }[size]
+  // className überschreibt size wenn angegeben
+  const sizeClass = className ?? { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' }[size]
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-white rounded-2xl shadow-xl w-full ${widthClass} max-h-[90vh] overflow-y-auto`}>
+      <div className={`relative bg-white rounded-2xl shadow-xl w-full ${sizeClass} max-h-[90vh] overflow-y-auto`}>
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white rounded-t-2xl z-10">
           <h2 className="text-lg font-semibold text-[#1E3A5F]">{title}</h2>
           <button
@@ -53,13 +58,10 @@ export { Modal }           // import { Modal } from '@/components/ui/Modal'
 // ConfirmModal
 // import { ConfirmModal } from '@/components/ui/Modal'   ← Named Export (Phase 1/2)
 //
-// Unterstützte Props (vollständig, kompatibel mit allen Verwendungen):
-//   open, title, message            – Pflicht
-//   onConfirm                       – Pflicht, darf async sein
-//   onCancel | onClose              – mind. eines Pflicht (beide werden akzeptiert)
-//   confirmLabel                    – optional, Default: 'Bestätigen'
-//   danger                          – optional, Default: false
-//   loading                         – optional, zeigt Spinner auf Confirm-Button
+// Props vollständig kompatibel mit allen Verwendungen in Phase 1/2 und Phase 3:
+//   open, title, message, onConfirm       – Pflicht
+//   onCancel | onClose                    – mind. eines (beide akzeptiert)
+//   confirmLabel, danger, loading         – optional
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface ConfirmModalProps {
@@ -67,9 +69,8 @@ interface ConfirmModalProps {
   title: string
   message: string
   onConfirm: () => void | Promise<void>
-  // Beide Varianten akzeptieren – Phase 1/2 nutzt onClose, Phase 3 nutzt onCancel
-  onCancel?: () => void
-  onClose?: () => void
+  onCancel?: () => void   // Phase 3
+  onClose?: () => void    // Phase 1/2 (stammdaten/page.tsx, AgeCategoryEditor.tsx …)
   confirmLabel?: string
   danger?: boolean
   loading?: boolean
@@ -86,7 +87,6 @@ export function ConfirmModal({
   danger = false,
   loading = false,
 }: ConfirmModalProps) {
-  // Beide Prop-Namen unterstützen
   const handleClose = onCancel ?? onClose ?? (() => {})
 
   return (
@@ -104,7 +104,7 @@ export function ConfirmModal({
           onClick={onConfirm}
           disabled={loading}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg min-h-[44px] disabled:opacity-70 ${
-            danger ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
+            danger ? 'bg-red-600 hover:bg-red-700' : 'bg-[#F97316] hover:bg-orange-600'
           }`}
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
