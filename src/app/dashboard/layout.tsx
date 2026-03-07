@@ -1,229 +1,227 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Mountain,
-  Settings,
-  Users,
-  BedDouble,
-  UtensilsCrossed,
-  ClipboardCheck,
-  Receipt,
-  Calculator,
-  LogOut,
-  ChevronDown,
-  Menu,
-  X,
-  ShieldCheck,
+  Settings, Users, BedDouble, Utensils, ClipboardList,
+  Receipt, Calculator, LogOut, Menu, X, Mountain,
+  ChevronDown, Check
 } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useSelectedTrip } from '@/lib/useSelectedTrip'
-import type { Trip, Profile } from '@/types/database'
-import { cn } from '@/lib/utils'
+import type { Trip } from '@/types/database'
 
-const navItems = [
-  { href: '/dashboard/stammdaten', label: 'Stammdaten', icon: Settings, adminOnly: true },
-  { href: '/dashboard/personen', label: 'Personen', icon: Users },
-  { href: '/dashboard/belegung', label: 'Belegung', icon: BedDouble },
-  { href: '/dashboard/essen', label: 'Essen', icon: UtensilsCrossed },
-  { href: '/dashboard/anwesenheit', label: 'Anwesenheit', icon: ClipboardCheck },
-  { href: '/dashboard/belege', label: 'Belege', icon: Receipt, adminOnly: true },
-  { href: '/dashboard/meine-belege', label: 'Meine Belege', icon: Receipt, guestOnly: true },
-  { href: '/dashboard/abrechnung', label: 'Abrechnung', icon: Calculator, adminOnly: true },
-  { href: '/dashboard/admin/users', label: 'Admin', icon: ShieldCheck, adminOnly: true },
+const supabase = getSupabaseClient()
+
+const NAV_ITEMS = [
+  { href: '/dashboard/stammdaten', label: 'Stammdaten',  icon: Settings,       adminOnly: true  },
+  { href: '/dashboard/personen',   label: 'Personen',    icon: Users,          adminOnly: false },
+  { href: '/dashboard/belegung',   label: 'Belegung',    icon: BedDouble,      adminOnly: false },
+  { href: '/dashboard/essen',      label: 'Essen',       icon: Utensils,       adminOnly: false },
+  { href: '/dashboard/anwesenheit',label: 'Anwesenheit', icon: ClipboardList,  adminOnly: false },
+  { href: '/dashboard/belege',     label: 'Belege',      icon: Receipt,        adminOnly: false },
+  { href: '/dashboard/abrechnung', label: 'Abrechnung',  icon: Calculator,     adminOnly: true  },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const supabase = getSupabaseClient()
   const { selectedTrip, setSelectedTrip } = useSelectedTrip()
 
-  const [trips, setTrips] = useState<Trip[]>([])
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [tripDropdownOpen, setTripDropdownOpen] = useState(false)
+  const [trips, setTrips] = useState<Trip[]>([])
+  const [userRole, setUserRole] = useState<string>('user')
 
+  // Trips laden für Selector
   useEffect(() => {
-    async function loadData() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/')
-        return
-      }
-
-      const [{ data: profileData }, { data: tripsData }] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
-        supabase.from('trips').select('*').order('year', { ascending: false }),
-      ])
-
-      setProfile(profileData)
-      setTrips(tripsData ?? [])
-
-      // Auto-select first trip if none selected
-      if (!selectedTrip && tripsData && tripsData.length > 0) {
-        setSelectedTrip(tripsData[0])
-      }
-    }
-    loadData()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    supabase.from('trips').select('*').order('year', { ascending: false }).then(({ data }) => {
+      if (data) setTrips(data)
+    })
   }, [])
+
+  // User-Rolle laden
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { router.push('/'); return }
+      const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      if (data) setUserRole(data.role)
+    })
+  }, [router])
 
   async function handleSignOut() {
     await supabase.auth.signOut()
     router.push('/')
   }
 
-  const role = profile?.role ?? 'guest'
-  const isAdmin = role === 'admin'
-  const isGuest = role === 'guest'
-
-  const visibleNavItems = navItems.filter((item) => {
-    if (item.adminOnly && !isAdmin) return false
-    if (item.guestOnly && !isGuest) return false
-    if (!item.adminOnly && !item.guestOnly) return true
-    return true
-  })
-
-  const NavLinks = () => (
-    <>
-      {visibleNavItems.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          onClick={() => setMobileOpen(false)}
-          className={cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-            pathname === item.href
-              ? 'bg-[#F97316] text-white'
-              : 'text-blue-100 hover:bg-white/10 hover:text-white'
-          )}
-        >
-          <item.icon className="h-5 w-5 shrink-0" />
-          {item.label}
-        </Link>
-      ))}
-    </>
-  )
+  const visibleNav = NAV_ITEMS.filter(item => !item.adminOnly || userRole === 'admin')
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar desktop */}
-      <aside className="hidden lg:flex flex-col w-64 bg-[#1E3A5F] text-white shrink-0">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* ── Top Bar ── */}
+      <header className="bg-[#1E3A5F] text-white h-14 flex items-center px-4 gap-3 shrink-0 z-30 sticky top-0">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 rounded-lg hover:bg-white/10 min-h-[44px] min-w-[44px] flex items-center justify-center"
+        >
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10">
-          <Mountain className="h-8 w-8 text-[#F97316]" />
-          <div>
-            <p className="font-bold text-sm leading-tight">Hütten-Manager</p>
-            <p className="text-xs text-blue-300">v5.0</p>
-          </div>
+        <div className="flex items-center gap-2">
+          <Mountain className="w-6 h-6 text-[#F97316]" />
+          <span className="font-bold text-base hidden sm:block">Hütten-Manager</span>
         </div>
 
-        {/* Trip selector */}
-        <div className="px-3 py-3 border-b border-white/10">
-          <p className="text-xs text-blue-400 uppercase tracking-wider px-2 mb-1">Aktiver Trip</p>
-          <div className="relative">
-            <button
-              onClick={() => setTripDropdownOpen(!tripDropdownOpen)}
-              className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-sm bg-white/10 hover:bg-white/20 transition-colors"
-            >
-              <span className="truncate">{selectedTrip?.name ?? 'Kein Trip ausgewählt'}</span>
-              <ChevronDown className="h-4 w-4 shrink-0" />
-            </button>
-            {tripDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl z-20 overflow-hidden">
-                {trips.map((trip) => (
-                  <button
-                    key={trip.id}
-                    onClick={() => {
-                      setSelectedTrip(trip)
-                      setTripDropdownOpen(false)
-                    }}
-                    className={cn(
-                      'w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors',
-                      selectedTrip?.id === trip.id
-                        ? 'bg-orange-50 text-[#F97316] font-medium'
-                        : 'text-gray-700'
-                    )}
-                  >
-                    {trip.name} ({trip.year})
-                  </button>
-                ))}
+        {/* Trip Selector */}
+        <div className="relative ml-auto">
+          <button
+            onClick={() => setTripDropdownOpen(!tripDropdownOpen)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-sm min-h-[36px] max-w-[200px] sm:max-w-[280px]"
+          >
+            <span className="truncate">
+              {selectedTrip ? selectedTrip.name : 'Urlaub auswählen…'}
+            </span>
+            <ChevronDown className="w-4 h-4 shrink-0" />
+          </button>
+
+          {tripDropdownOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setTripDropdownOpen(false)} />
+              <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border w-64 z-50 overflow-hidden">
+                {trips.length === 0 ? (
+                  <div className="px-4 py-3 text-sm text-gray-500">
+                    Keine Trips vorhanden.{' '}
+                    <Link href="/dashboard/stammdaten" className="text-[#2563EB] hover:underline" onClick={() => setTripDropdownOpen(false)}>
+                      Jetzt anlegen →
+                    </Link>
+                  </div>
+                ) : (
+                  <ul className="py-1">
+                    {trips.map(trip => (
+                      <li key={trip.id}>
+                        <button
+                          onClick={() => { setSelectedTrip(trip); setTripDropdownOpen(false) }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left hover:bg-gray-50"
+                        >
+                          <Check className={`w-4 h-4 shrink-0 ${selectedTrip?.id === trip.id ? 'text-[#2563EB]' : 'text-transparent'}`} />
+                          <span className="flex-1 truncate text-[#1E3A5F] font-medium">{trip.name}</span>
+                          <span className="text-xs text-gray-400">{trip.year}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
+      </header>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <NavLinks />
+      <div className="flex flex-1 overflow-hidden">
+        {/* ── Sidebar (Desktop) ── */}
+        <nav className="hidden md:flex flex-col w-56 bg-[#1E3A5F] shrink-0">
+          <ul className="flex-1 py-3 space-y-0.5 px-2">
+            {visibleNav.map(item => {
+              const active = pathname.startsWith(item.href)
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors min-h-[44px] ${
+                      active
+                        ? 'bg-[#F97316] text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <item.icon className="w-4 h-4 shrink-0" />
+                    {item.label}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+
+          <div className="p-2 border-t border-white/10">
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white min-h-[44px]"
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              Abmelden
+            </button>
+          </div>
         </nav>
 
-        {/* User */}
-        <div className="border-t border-white/10 px-3 py-3">
-          <div className="flex items-center gap-2 px-2 mb-2">
-            <div className="h-8 w-8 rounded-full bg-[#F97316] flex items-center justify-center text-white font-medium text-sm">
-              {profile?.full_name?.[0]?.toUpperCase() ?? '?'}
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-white truncate">
-                {profile?.full_name ?? profile?.email}
-              </p>
-              <p className="text-xs text-blue-400 capitalize">{role}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2 w-full rounded-lg px-3 py-2 text-sm text-blue-300 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            Abmelden
-          </button>
-        </div>
-      </aside>
+        {/* ── Mobile Drawer ── */}
+        {mobileMenuOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-40 bg-black/50 md:hidden"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <nav className="fixed inset-y-0 left-0 z-50 w-64 bg-[#1E3A5F] flex flex-col md:hidden">
+              <div className="flex items-center gap-2 h-14 px-4 border-b border-white/10">
+                <Mountain className="w-5 h-5 text-[#F97316]" />
+                <span className="font-bold text-white">Hütten-Manager</span>
+                <button onClick={() => setMobileMenuOpen(false)} className="ml-auto p-2 text-white/60 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-      {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between bg-[#1E3A5F] text-white px-4 h-14">
-        <div className="flex items-center gap-2">
-          <Mountain className="h-6 w-6 text-[#F97316]" />
-          <span className="font-bold text-sm">{selectedTrip?.name ?? 'Hütten-Manager'}</span>
-        </div>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2">
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
+              <ul className="flex-1 py-3 space-y-0.5 px-2 overflow-y-auto">
+                {visibleNav.map(item => {
+                  const active = pathname.startsWith(item.href)
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium min-h-[44px] ${
+                          active
+                            ? 'bg-[#F97316] text-white'
+                            : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        <item.icon className="w-4 h-4 shrink-0" />
+                        {item.label}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
 
-      {/* Mobile menu overlay */}
-      {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-20 bg-black/50" onClick={() => setMobileOpen(false)}>
-          <div
-            className="w-64 h-full bg-[#1E3A5F] flex flex-col pt-14"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-              <NavLinks />
+              <div className="p-2 border-t border-white/10">
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:text-white min-h-[44px]"
+                >
+                  <LogOut className="w-4 h-4 shrink-0" />
+                  Abmelden
+                </button>
+              </div>
             </nav>
-            <div className="border-t border-white/10 px-3 py-3">
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 w-full rounded-lg px-3 py-2 text-sm text-blue-300 hover:text-white hover:bg-white/10"
-              >
-                <LogOut className="h-4 w-4" />
-                Abmelden
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
 
-      {/* Main content */}
-      <main className="flex-1 min-w-0 pt-14 lg:pt-0 overflow-auto">
-        <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+        {/* ── Main Content ── */}
+        <main className="flex-1 overflow-y-auto">
+          {/* Trip-Hinweis wenn kein Trip ausgewählt */}
+          {!selectedTrip && pathname !== '/dashboard/stammdaten' && (
+            <div className="mx-4 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+              <strong>Kein Urlaub ausgewählt.</strong>{' '}
+              Bitte oben einen Urlaub wählen oder{' '}
+              <Link href="/dashboard/stammdaten" className="font-semibold underline">
+                in den Stammdaten einen neuen anlegen
+              </Link>
+              .
+            </div>
+          )}
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }
