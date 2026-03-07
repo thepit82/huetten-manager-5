@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push('/'); return }
       const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      if (data) setUserRole(data.role)
+      if (data?.role) setUserRole(data.role)
     })
   }, [router])
 
