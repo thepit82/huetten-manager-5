@@ -17,8 +17,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Plus, Pencil, Trash2, Settings, BedDouble,
-  Users, Copy, RotateCcw, ChevronDown, X, Loader2,
-  CheckSquare, Square
+  Users, RotateCcw, X, Loader2
 } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase'
 import { useSelectedTrip } from '@/lib/useSelectedTrip'
@@ -75,7 +74,8 @@ function Toast({ message, type, onDismiss }: { message: string; type: 'success' 
 type TabId = 'trips' | 'age' | 'rooms'
 
 export default function StammdatenPage() {
-  const { selectedTripId, setSelectedTripId } = useSelectedTrip()
+  const { selectedTrip: activeTrip, setSelectedTrip } = useSelectedTrip()
+  const selectedTripId = activeTrip?.id ?? null
 
   // State
   const [trips, setTrips] = useState<Trip[]>([])
@@ -188,7 +188,7 @@ export default function StammdatenPage() {
         await supabase.from('age_categories').insert(
           DEFAULT_AGE_CATEGORIES.map((cat, i) => ({ ...cat, trip_id: data.id, sort_order: i }))
         )
-        setSelectedTripId(data.id)
+        setSelectedTrip(data)
       }
       setTripModalOpen(false)
     } catch (err) {
@@ -205,7 +205,7 @@ export default function StammdatenPage() {
       const { error } = await supabase.from('trips').delete().eq('id', deleteTripTarget.id)
       if (error) throw error
       setTrips(prev => prev.filter(t => t.id !== deleteTripTarget.id))
-      if (selectedTripId === deleteTripTarget.id) setSelectedTripId(null)
+      if (selectedTripId === deleteTripTarget.id) setSelectedTrip(null)
       showToast(`Trip gelöscht`)
       setDeleteTripTarget(null)
     } catch (err) {
@@ -401,7 +401,7 @@ export default function StammdatenPage() {
             <div className="space-y-3">
               {trips.map(trip => (
                 <div key={trip.id} className={`flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all ${selectedTripId === trip.id ? 'border-[#2563EB] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
-                  onClick={() => setSelectedTripId(trip.id)}>
+                  onClick={() => setSelectedTrip(trip)}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-semibold text-[#1E3A5F] truncate">{trip.name}</p>
